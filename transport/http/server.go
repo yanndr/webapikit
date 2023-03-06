@@ -1,9 +1,11 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/yanndr/webapikit/endpoint"
+	"io"
 	"log"
 	"net/http"
 )
@@ -22,7 +24,7 @@ func NewServer[T, K any](e endpoint.Endpoint[*T, K], decoder Decoder[T], l *log.
 	return &Server[T, K]{
 		e:      e,
 		dec:    decoder,
-		enc:    encodeResponse[K],
+		enc:    EncodeResponse[K],
 		logger: l,
 	}
 }
@@ -62,6 +64,23 @@ func DefaultErrorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 	w.Write(body)
 }
 
-func encodeResponse[T any](_ context.Context, w http.ResponseWriter, response T) error {
+func EncodeResponse[T any](_ context.Context, w http.ResponseWriter, response T) error {
 	return json.NewEncoder(w).Encode(response)
+}
+
+func DecodeRequest[T any](_ context.Context, r *http.Request) (*T, error) {
+	var request T
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return &request, nil
+}
+
+func EncodeRequest[T any](_ context.Context, r *http.Request, request *T) error {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(request); err != nil {
+		return err
+	}
+	r.Body = io.NopCloser(&buf)
+	return nil
 }
