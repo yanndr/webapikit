@@ -68,6 +68,13 @@ func EncodeResponse[T any](_ context.Context, w http.ResponseWriter, response T)
 	return json.NewEncoder(w).Encode(response)
 }
 
+type EmptyRequest struct {
+}
+
+func DecodeEmptyRequest(_ context.Context, r *http.Request) (*EmptyRequest, error) {
+	return &EmptyRequest{}, nil
+}
+
 func DecodeRequest[T any](_ context.Context, r *http.Request) (*T, error) {
 	var request T
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
