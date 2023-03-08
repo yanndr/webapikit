@@ -36,6 +36,7 @@ func (s *Server[T, K]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	request, err := s.dec(ctx, r)
 	if err != nil {
 		s.logger.Printf("err server: %w", err)
+		DefaultErrorEncoder(ctx, err, w)
 		return
 	}
 
